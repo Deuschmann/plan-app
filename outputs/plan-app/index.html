@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#17191b" />
+    <title>计划 App</title>
+    <link rel="manifest" href="./manifest.webmanifest?v=23" />
+    <link rel="icon" href="./icon.svg" />
+    <link rel="stylesheet" href="./styles.css?v=23" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="todayLabel">今日</p>
+          <h1 id="selectedDateTitle">计划 App</h1>
+        </div>
+        <div class="top-actions">
+          <button class="icon-button" id="exportBtn" type="button" title="导出数据" aria-label="导出数据">
+            <span aria-hidden="true">⇩</span>
+          </button>
+          <label class="icon-button file-button" title="导入数据" aria-label="导入数据">
+            <span aria-hidden="true">⇧</span>
+            <input id="importFile" type="file" accept="application/json" />
+          </label>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="page active" id="page-plan" data-page="plan">
+          <div class="date-dock" aria-label="日期选择">
+            <div class="date-control-row">
+              <button class="icon-button" id="prevDayBtn" type="button" title="前一天" aria-label="前一天">‹</button>
+              <button class="today-button" id="goTodayBtn" type="button">回到今天</button>
+              <input id="datePicker" type="text" inputmode="none" aria-label="选择日期" />
+              <button class="icon-button" id="nextDayBtn" type="button" title="后一天" aria-label="后一天">›</button>
+            </div>
+            <div class="week-strip" id="weekStrip"></div>
+          </div>
+
+          <div class="plan-switch" aria-label="计划视图切换">
+            <button class="active" type="button" data-plan-tab="daily">当日计划</button>
+            <button type="button" data-plan-tab="goals">我的规划</button>
+          </div>
+
+          <section class="pre-register-state" id="preRegisterState" hidden>
+            <p class="eyebrow">Before Start</p>
+            <h2>此刻您尚未注册</h2>
+            <p>这一天早于您的使用起点，因此不会生成计划、任务或饮食记录。</p>
+          </section>
+
+          <div class="plan-pane active" data-plan-pane="daily">
+            <section class="focus-card" id="focusCard" aria-label="当前时间表"></section>
+
+            <section class="panel today-panel" aria-labelledby="todayHeading">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Daily Plan</p>
+                  <h2 id="todayHeading">时间表</h2>
+                </div>
+                <button class="secondary" id="addBlockBtn" type="button">添加</button>
+              </div>
+              <form class="quick-form" id="blockForm" autocomplete="off">
+                <input id="blockTime" type="text" inputmode="none" required />
+                <input id="blockTitle" type="text" placeholder="例如 早餐、锻炼" required />
+                <input id="blockDuration" type="text" inputmode="none" placeholder="分钟" required />
+                <button type="submit">保存</button>
+              </form>
+              <form class="template-form" id="templateForm" autocomplete="off">
+                <input id="templateName" type="text" placeholder="模板名，例如 工作日" />
+                <button type="submit">保存为模板</button>
+                <button class="secondary" id="copyYesterdayBtn" type="button">复制昨天</button>
+              </form>
+              <div class="template-list" id="templateList"></div>
+              <div class="timeline" id="timeline"></div>
+            </section>
+          </div>
+
+          <div class="plan-pane" data-plan-pane="goals">
+            <section class="panel goals-panel" aria-labelledby="goalsHeading">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Goals</p>
+                  <h2 id="goalsHeading">我的规划</h2>
+                </div>
+            </div>
+            <form class="goal-form" id="goalForm" autocomplete="off">
+              <input id="goalScope" type="hidden" value="weekly" />
+              <div class="scope-segment" aria-label="目标周期">
+                <button class="active" type="button" data-goal-scope="weekly">本周</button>
+                <button type="button" data-goal-scope="monthly">本月</button>
+                <button type="button" data-goal-scope="yearly">今年</button>
+              </div>
+              <input id="goalTitle" type="text" placeholder="新增一个规划" required />
+              <button type="submit">新增</button>
+            </form>
+              <div class="goal-lists" id="goalLists"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="page-tasks" data-page="tasks">
+          <section class="panel overview-panel" aria-labelledby="overviewHeading">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Time Share</p>
+                <h2 id="overviewHeading">任务时间占比</h2>
+              </div>
+            </div>
+            <div class="time-overview">
+              <div class="pie-scene">
+                <div class="pie-3d" id="timeDonut" role="img" aria-label="每日任务时间占比图"></div>
+                <div class="pie-center">
+                  <strong id="plannedHours">0h</strong>
+                  <span>任务时间</span>
+                </div>
+              </div>
+              <div class="legend-list" id="timeLegend"></div>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="tasksHeading">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Tasks</p>
+                <h2 id="tasksHeading">任务清单</h2>
+              </div>
+            </div>
+            <form class="quick-form" id="taskForm" autocomplete="off">
+              <input id="taskTitle" type="text" placeholder="今天要完成什么" required />
+              <input id="taskDuration" type="text" inputmode="none" placeholder="分钟" required />
+              <button type="submit">添加</button>
+            </form>
+            <div class="cards" id="taskList"></div>
+          </section>
+        </section>
+
+        <section class="page" id="page-food" data-page="food">
+          <section class="panel" aria-labelledby="foodHeading">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Food</p>
+                <h2 id="foodHeading">饮食记录</h2>
+              </div>
+            </div>
+            <form class="food-form" id="foodForm" autocomplete="off">
+              <input id="foodTime" type="text" inputmode="none" required />
+              <input id="foodName" type="text" placeholder="吃了什么" required />
+              <input id="foodCalories" type="number" min="0" placeholder="kcal" />
+              <input id="foodProtein" type="number" min="0" step="0.1" placeholder="蛋白 g" />
+              <input id="foodFat" type="number" min="0" step="0.1" placeholder="脂肪 g" />
+              <input id="foodCarbs" type="number" min="0" step="0.1" placeholder="碳水 g" />
+              <button type="submit">记录</button>
+            </form>
+            <div class="food-library" id="foodLibrary"></div>
+            <div class="nutrition-summary" id="nutritionSummary"></div>
+            <div class="cards compact" id="foodList"></div>
+          </section>
+        </section>
+
+        <section class="page" id="page-feedback" data-page="feedback">
+          <section class="panel feedback-panel" aria-labelledby="feedbackHeading">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Review</p>
+                <h2 id="feedbackHeading">当日反馈</h2>
+              </div>
+              <button class="secondary" id="resetDemoBtn" type="button">清空今日</button>
+            </div>
+            <div class="feedback" id="feedback"></div>
+          </section>
+        </section>
+
+        <section class="page" id="page-user" data-page="user">
+          <section class="panel" aria-labelledby="bodyHeading">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Profile</p>
+                <h2 id="bodyHeading">身体与营养</h2>
+              </div>
+            </div>
+            <form class="body-grid" id="bodyForm" autocomplete="off">
+              <label>性别
+                <select id="sex">
+                  <option value="male">男</option>
+                  <option value="female">女</option>
+                </select>
+              </label>
+              <label>年龄
+                <input id="age" type="number" min="10" max="100" value="25" />
+              </label>
+              <label>身高 cm
+                <input id="height" type="number" min="100" max="230" value="175" />
+              </label>
+              <label>体重 kg
+                <input id="weight" type="number" min="30" max="250" step="0.1" value="70" />
+              </label>
+              <label>目标
+                <select id="fitnessGoal">
+                  <option value="cut">减脂</option>
+                  <option value="maintain">维持</option>
+                  <option value="bulk">增肌</option>
+                  <option value="performance">提升体能</option>
+                </select>
+              </label>
+              <label>活动水平
+                <select id="activity">
+                  <option value="1.2">久坐</option>
+                  <option value="1.375">轻度活动</option>
+                  <option value="1.55">中等活动</option>
+                  <option value="1.725">高活动</option>
+                </select>
+              </label>
+            </form>
+            <div class="metrics" id="metrics"></div>
+          </section>
+
+          <section class="panel" aria-labelledby="routineHeading">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Routine</p>
+                <h2 id="routineHeading">默认作息</h2>
+              </div>
+            </div>
+            <div class="routine-grid">
+              <label>起床时间
+                <input id="wakeTime" type="text" inputmode="none" aria-label="默认起床时间" />
+              </label>
+              <label>睡觉时间
+                <input id="sleepTime" type="text" inputmode="none" aria-label="默认睡觉时间" />
+              </label>
+            </div>
+          </section>
+
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="底部导航">
+        <button class="nav-item active" type="button" data-nav="plan">计划</button>
+        <button class="nav-item" type="button" data-nav="tasks">任务</button>
+        <button class="nav-item" type="button" data-nav="food">饮食</button>
+        <button class="nav-item" type="button" data-nav="feedback">反馈</button>
+        <button class="nav-item" type="button" data-nav="user">用户</button>
+      </nav>
+
+      <div class="picker-backdrop" id="pickerBackdrop" hidden>
+        <section class="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+          <header class="picker-head">
+            <button class="secondary" id="pickerCancel" type="button">取消</button>
+            <h2 id="pickerTitle">选择</h2>
+            <button id="pickerDone" type="button">完成</button>
+          </header>
+          <div class="picker-body" id="pickerBody"></div>
+        </section>
+      </div>
+      <div class="undo-toast" id="undoToast" hidden></div>
+    </div>
+
+    <script src="./app.js?v=23" type="module"></script>
+  </body>
+</html>
